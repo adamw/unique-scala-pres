@@ -59,6 +59,14 @@
 
 						---
 
+						## Multi-platform
+
+						* JVM: dominant
+						* JS
+						* Native
+
+						---
+
 						## FP + OO fusion: but what are they?
 					</textarea>
 				</section>
@@ -78,18 +86,17 @@
 					<textarea data-template>
 						## OO in Scala
 
-						```scala
+						```scala [1|1-2|1-3|5-7|9-10|12-14]
 						trait Student:
 						  def attemptExam(subject: Subject): Grade
 						  def goToParty(): Boolean = true
 
-						class DiligentStudent(knowledge: List[Book]) extends Student:
+						class DiligentStudent(knowledge: List[Book])
+						    extends Student:
 						  def attemptExam(subject: Subject): Grade = ...
 
 						class LazyStudent(excuses: List[String]) extends Student:
 						  def attemptExam(subject: Subject): Grade = ...
-
-						//
 
 						class Professor:
 						  def runExam(sub: Subject, sl: List[Student]): List[Grade] =
@@ -112,9 +119,10 @@
 					<textarea data-template>
 						## FP in Scala
 
-						```scala
+						```scala [1|1-3|1-4|6|8-11|13-14]
 						trait Student
-						case class DiligentStudent(knowledge: List[Book]) extends Student
+						case class DiligentStudent(knowledge: List[Book])
+						  extends Student
 						case class LazyStudent(excuses: List[String]) extends Student
 
 						def goToParty(s: Student): Boolean = true
@@ -123,8 +131,6 @@
 						  s match
 						    case DiligentStudent(knowledge) => ...
 						    case LazyStudent(excuses) => ...
-
-						//
 
 						def runExam(sub: Subject, sl: List[Student]): List[Grade] =
 						  sl.map(s => attemptExam(sub, s))
@@ -146,7 +152,7 @@
 					<textarea data-template>
 						## Data modelling
 
-						```scala
+						```scala [1-2|4-5|7-10]
 						trait FieldOfStudy:
 						  def points: Int
 
@@ -161,7 +167,7 @@
 
 						---
 
-						```scala
+						```scala [1-3|5-9|11-14]
 						trait Student:
 						  def field: FieldOfStudy
 						  def knowsAbout(subject: Subject): Boolean
@@ -175,13 +181,12 @@
 						case class LazyStudent(field: FieldOfStudy,
 						    excuses: List[String]) extends Student:
 
-						  def knowsAbout(subject: Subject): Boolean =
-						    false
+						  def knowsAbout(subject: Subject): Boolean = false
 						```
 
 						---
 
-						```scala
+						```scala [1|2|3-4|6-7|9-11|13]
 						def oralExam(student: Student): Grade =
 						  student match
 						    case DiligentStudent(ComputerScience, _) =>
@@ -245,8 +250,9 @@
 
 						---
 
-						```scala
-						case class Student(name: String, yearOfStudy: Int, grades: Map[Subject, Grade])
+						```scala [1-2|4-8]
+						case class Student(name: String, yearOfStudy: Int,
+						  grades: Map[Subject, Grade])
 
 						def finishYear(s: Student): Student =
 						  if grades.values.forall(_ != Grade.Fail)
@@ -259,7 +265,7 @@
 
 						## Collections
 
-						```scala
+						```scala [5-6|7|8|9|10|11|1-3]
 						case class Result(s: Student, sub: Subject, grade: Grade):
 						  def addToStudent: Student =
 						    student.copy(grades = student.grades + (sub -> grade))
@@ -293,7 +299,7 @@
 
 						me.thesisTitle match
 						  case Some(title) => println(title)
-						  case None => 		  println("Will be ready next week!")
+						  case None 		   => println("Will be ready next week!")
 						```
 
 						---
@@ -311,20 +317,446 @@
 
 						## Optionality as an error
 
-						```scala
+						```scala [2|3|4|1,5]
 						val defended: Option[Grade] = for {
 						  thesis <- me.thesis
 						  when <- supervisor.availableTimeSlots.headOption
 						  where <- roomsWithProjector.find(_.hasFreeSlot(when))
 						} yield defend(thesis, when, where)
 						```
+
+						---
+
+						## Why immutability?
+
+						1. Local reasoning
+
+						```scala
+						val sl: List[Student] = ...
+						val grades: Map[Student, Grade] = simulateExam(sl)
+
+						// are the original students modified?
+						```
+
+						Anti-fragility
+						<!-- .element: class="fragment" -->
+
+						---
+
+						## Why immutability?
+
+						2. Concurrency
+
+						```scala
+						val sl: List[Student] = ...
+						fork {
+						  calculateUniversityRanking(sl)
+						}
+						fork {
+						  val results = runExam(sl)
+						  val updateStudentsWithResults(sl, results)
+						}
+						```
+
+						Data safety
+						<!-- .element: class="fragment" -->
+
+						---
+
+						## Why type safety?
+
+						* compile-time verification
+						* less tests
+						* documentation
+						* eliminate bugs
+						* IDE completion
+						* refactor with confidence
+						* generate code
+
+						---
+
+						## How is Scala type-safe?
+
+						Generics, but done properly:
+
+						```scala
+						class Room[T](inhabitants: Set[T]):
+						  def moveIn(t: T): Room[T] = ...
+						  def count: Int = ...
+						```
+
+						---
+
+						## What is `List`?
+
+						```scala
+						val l1: List[String] = List("a", "b", "c")
+						val l2: List[Student] = ...
+						val l3: List[Int] = List(1, 2, 3)
+						```
+
+						`List` is a <span class="fragment highlight-red">type constructor</span>
+
+						---
+
+						## Using a type constructor
+
+						```scala [1-2|4-5|7-9]
+						trait Mappable[F[_]]:
+						  def map[A, B](fa: F[A])(f: A => B): F[B]
+
+						object ListIsMappable extends Mappable[List]:
+						  def map[A, B](fa: List[A])(f: A => B): List[B] = ...
+
+						object FutureIsMappable(using ExecutionContext)
+						    extends Mappable[Future]:
+						  def map[A, B](fa: Future[A])(f: A => B): Future[B] = ...
+						```
+
+						---
+
+						## Using a mappable
+
+						```scala [4-6|10-13]
+						trait Mappable[F[_]]:
+						  def map[A, B](fa: F[A])(f: A => B): F[B]
+
+						def gradeStudent[F[_]](s: F[Student], f: Student => Grade)(
+						    m: Mappable[F]): F[Grade] =
+						  m.map(s)(f)
+
+						//
+
+						gradeStudent(List(student1, student2), oralExam)(
+						  ListIsMappable)
+						gradeStudent(database.find(studentId), oralExam)(
+						  FutureIsMappable(...))
+						```
+
+						---
+
+						## From types, to code
+
+						```scala [4-8]
+						trait Mappable[F[_]]:
+						  def map[A, B](fa: F[A])(f: A => B): F[B]
+
+						given Mappable[List]:
+						  def map[A, B](fa: List[A])(f: A => B): List[B] = ...
+
+						given Mappable[Future](using ExecutionContext):
+						  def map[A, B](fa: Future[A])(f: A => B): Future[B] = ...
+						```
+
+						---
+
+						## Using a mappable, but shorter
+
+						```scala [4-6|10-11]
+						trait Mappable[F[_]]:
+						  def map[A, B](fa: F[A])(f: A => B): F[B]
+
+						def gradeStudent[F[_]](s: F[Student],
+						    f: Student => Grade)(using Mappable[F]): F[Grade] =
+						  summon[Mappable[F]].map(s)(f)
+
+						//
+
+						gradeStudent(List(student1, student2), oralExam)
+						gradeStudent(database.find(studentId), oralExam)
+						```
+
+						---
+
+						## Type classes
+
+						How to capture common properties of types, we can't/ don't want to modify?
+
+						`Mappable` is a type class
+						<!-- .element: class="fragment" -->
+
+						---
+
+						## Another type class example
+
+						```scala
+						trait Scientist[T]:
+						  def canResearch(who: T, sub: Subject): Boolean
+
+						given Scientist[Student]:
+						  def canResearch(who: Student, sub: Subject): Boolean = true
+
+						given Scientist[Professor]:
+						  def canResearch(who: Professor, sub: Subject): Boolean =
+							who.knowsAbout(sub)
+						```
+
+						`Scientist` is a type class
+						<!-- .element: class="fragment" -->
+
+						---
+
+						## Another example of using a type class
+
+						```scala [1-5|7]
+						def solve[T](by: T, what: Subject)(using Scientist[T]) =
+						  if summon[Scientist[T]].canResearch(who, sub)
+						    println("Problem solved!")
+						  else
+						    println("No idea!")
+
+						solve[Student](me, subject)
+						```
+
+						---
+
+						## Yet another example of a type class
+
+						```scala [1-3|5-12]
+						trait JsonCodec[T]:
+						  def encode(t: T): String
+						  def decode(s: String): Either[Error, T]
+
+						given JsonCodec[Student]:
+						  def encode(s: Student): String = s"""
+						    {
+						      "name": "${s.name}",
+						      ...
+						    }
+						    """
+						  def decode(s: String): Either[Error, Student] = ...
+						```
+
+						---
+
+						## Automatic derivation
+
+						```scala
+						inline given JsonCodec[T] = ${ deriveJsonCodec[T] }
+
+						def deriveJsonCodec[T: Type](using Quotes): Expr[String] =
+						  val objType = TypeRepr.of[T]
+						  objType.typeSymbol.caseFields match { case fields =>
+						    fields.map { field =>
+						      val fieldName = Expr(field.name)
+						      val fieldValue = Select(objExpr.asTerm, field).asExpr
+						      field.tree match {
+						        case vd: ValDef =>
+						          vd.tpt.tpe.asType match {
+						            case '[String] =>
+						              '{ $fieldName + ": \"" + $fieldValue + "\"" }
+						            case '[Int]    =>
+						              '{ $fieldName + ": " + $fieldValue.toString }
+						        case _ =>
+						          report.error("Unsupported field type")
+						  (...)
+						  }
+						```
+
+						---
+
+						## More inlines
+
+						```scala
+						inline def repeatWhile(inline f: Boolean): Unit =
+						  var loop = true
+						  while loop do loop = f
+						```
+
+						Usage:
+
+						```scala
+						repeatWhile {
+						  receive() match
+						    case Done     => false
+						    case Value(t) => println(t); true
+						}
+						```
+
+						---
+
+						## Case study: http endpoints with tapir
+
+						Describe an HTTP endpoint as a data structure, then:
+
+						* no behavior, just meta-data
+						* generate documentation
+						* expose as a server
+					</textarea>
+				</section>
+				<section data-markdown data-transition="none">
+					<textarea data-template>
+						```scala
+						val submitExam: PublicEndpoint[Unit, Unit] =
+						  endpoint
+						    .post
+						    .in("exam" / "submit")
+						```
+
+						---
+
+						```scala
+						val submitExam: PublicEndpoint[Solution, Unit] =
+						  endpoint
+						    .post
+						    .in("exam" / "submit")
+						    .in(jsonBody[Solution])
+						```
+
+						---
+
+						```scala
+						val submitExam: PublicEndpoint[(Solution, Token), Unit] =
+						  endpoint
+						    .post
+						    .in("exam" / "submit")
+						    .in(jsonBody[Solution])
+						    .in(query[Token]("token"))
+						```
+
+						---
+
+						```scala
+						val submitExam: PublicEndpoint[(Solution, Token), Unit] =
+						  endpoint
+						    .post
+						    .in("exam" / "submit")
+						    .in(jsonBody[Solution])
+						    .in(query[Token]("token")
+						      .description("Issued by the dean's office")
+						```
+
+						---
+
+						```scala
+						val submitExam: PublicEndpoint[(Solution, Token), Unit] =
+						  endpoint
+						    .post
+						    .in("exam" / "submit")
+						    .in(jsonBody[Solution].example(Solution(42))
+						    .in(query[Token]("token")
+						      .description("Issued by the dean's office")
+						```
+
+						---
+
+						```scala
+						val submitExam: PublicEndpoint[(Solution, Token), Result] =
+						  endpoint
+						    .post
+						    .in("exam" / "submit")
+						    .in(jsonBody[Solution].example(Solution(42))
+						    .in(query[Token]("token")
+						      .description("Issued by the dean's office")
+						    .out(jsonBody[Result])
+						```
+					</textarea>
+				</section>
+				<section data-markdown data-transition="slide">
+					<textarea data-template>
+						## Interpreting the endpoint
+
+						```scala [1-2|4-7]
+						def createSchema:
+						  List[PublicEndpoint[...]] => OpenAPISchema = ...
+
+						def exposeEndpoint:
+						  PublicEndpoint[INPUT, OUTPUT, ...] =>
+							(INPUT => OUTPUT) =>
+							HttpRoute = ...
+						```
+
+						---
+
+						<img src="img/openapi.png">
+
+						---
+
+						## Exposing the endpoint
+
+						We need to couple the description with matching server-side logic.
+
+						How to implement and organize the code?
+
+						* often complex
+						* needs to be properly modularized
+
+						---
+
+						```scala
+						class Database(cf: ConnectionFactory)
+
+						class StudentRepository(db: Database):
+						  def find(id: StudentId): Option[Student] = ...
+						  def save(s: Student): Unit = ...
+
+						trait ExamVerification:
+						  def verify(s: Student, e: Exam): Result = ...
+						class ManualVerification extends ExamVerification
+						class AutomaticVerification extends ExamVerification
+
+						class ExamService(repo: StudentRepository,
+						    verify: ExamVerification):
+						  def submitExam(s: Student, e: Exam): Result = ...
+						```
+
+						---
+
+						## FP in the small, OO in the large
+
+						---
+
+						## Scala use-cases
+
+						* server-side programming
+						* concurrent / parallel programming
+						* data processing
+						* command-line tools (scala-cli)
+						* data science (Spark)
+						* frontend (Scala.js)
+						* chess (lichess)
+
+
+						---
+
+						## How to start with Scala?
+
+						* [scala-lang.org](https://www.scala-lang.org)
+						* [scastie](https://scastie.scala-lang.org)
+						* [adopt tapir](https://adopt-tapir.softwaremill.com)
+						* [FP in Scala (video)](https://www.coursera.org/specializations/scala)
+						* [Rock the JVM](https://rockthejvm.com)
+						* [Programming in Scala](https://www.amazon.pl/Programming-Scala-Fifth-Martin-Odersky/dp/0997148004)
+						* [FP in Scala (book)](https://www.amazon.pl/Functional-Programming-Scala-Michael-Pilquist/dp/1617299588/ref=asc_df_1617299588/)
+
+						---
+
+						<img src="img/tapir.png">
+
+						---
+
+						```scala
+						println("Thank you!")
+						```
+						<!-- .element: style="text-align: center; font-size:40px;" -->
+
+						<a href="https://softwaremill.com"><img src="img/sml.png" alt="SoftwareMill logo" style="height: 180px;"></a>
+
+						<a href="https://twitter.com/adamwarski">@adamwarski</a> /
+						<a href="https://softwaremill.social/@adamwarski">@softwaremill.social</a>
 					</textarea>
 				</section>
 			</div>
 		</div>
 
 		<!--
+
+
+
+
 		FP in the small, OO in the large
+
+		type safety!
 
 		enum Grade:
 						  case Exceptional, Good, Pass, Fail
