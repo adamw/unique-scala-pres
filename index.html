@@ -99,8 +99,8 @@
 						  def attemptExam(subject: Subject): Grade = ...
 
 						class Professor:
-						  def runExam(sub: Subject, sl: List[Student]): List[Grade] =
-						    sl.map(s => s.attemptExam(sub))
+						  def runExam(sub: Subject, sl: List[Student]
+						    ): List[Grade] = sl.map(s => s.attemptExam(sub))
 						```
 					</textarea>
 				</section>
@@ -119,11 +119,12 @@
 					<textarea data-template>
 						## FP in Scala
 
-						```scala [1|1-3|1-4|6|8-11|13-14]
+						```scala [1|1-3|1-5|7|9-12]
 						trait Student
 						case class DiligentStudent(knowledge: List[Book])
 						  extends Student
-						case class LazyStudent(excuses: List[String]) extends Student
+						case class LazyStudent(excuses: List[String])
+						  extends Student
 
 						def goToParty(s: Student): Boolean = true
 
@@ -131,9 +132,6 @@
 						  s match
 						    case DiligentStudent(knowledge) => ...
 						    case LazyStudent(excuses) => ...
-
-						def runExam(sub: Subject, sl: List[Student]): List[Grade] =
-						  sl.map(s => attemptExam(sub, s))
 						```
 					</textarea>
 				</section>
@@ -421,8 +419,8 @@
 						trait Mappable[F[_]]:
 						  def map[A, B](fa: F[A])(f: A => B): F[B]
 
-						def gradeStudent[F[_]](s: F[Student], f: Student => Grade)(
-						    m: Mappable[F]): F[Grade] =
+						def gradeStudent[F[_]](s: F[Student],
+						    f: Student => Grade)(m: Mappable[F]): F[Grade] =
 						  m.map(s)(f)
 
 						//
