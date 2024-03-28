@@ -16,10 +16,319 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section data-markdown>
+					<textarea data-template>
+						##
+						## The unique features that make Scala, Scala
+
+						&nbsp;
+
+						Adam Warski, April 2024
+
+						<a href="https://twitter.com/adamwarski">@adamwarski</a> /
+						<a href="https://softwaremill.social/@adamwarski">@softwaremill.social</a>
+
+						<a href="https://softwaremill.com"><img src="img/sml.png" alt="SoftwareMill logo" style="height: 180px;"></a>
+
+						---
+
+						## What is Scala?
+
+						* general-purpose programming language&nbsp;&nbsp;&nbsp;
+						* functional
+						* object-oriented
+						* strongly typed
+
+						<img src="img/scala.png" alt="Scala logo" style="height: 180px;">
+
+						---
+
+						## What is Scala?
+
+						A programming language that scales with you: from small scripts to large multiplatform applications.
+
+						<img src="img/scala.png" alt="Scala logo" style="height: 180px;">
+
+						---
+
+						## Hello, world!
+
+						```scala
+						@main def hello(): Unit = println("Hello, SFI!")
+						```
+
+						---
+
+						## FP + OO fusion: but what are they?
+					</textarea>
+				</section>
+				<section>
+					<h2>Object oriented programming</h2>
+
+					<ul>
+						<li>combines state and behavior: <span class="fragment highlight-red">objects</span></li>
+						<li>interaction: <span class="fragment highlight-red">message passing</span></li>
+						<li>behavior templates: <span class="fragment highlight-red">classes</span></li>
+						<li>state is protected: <span class="fragment highlight-red">encapsulation</span></li>
+						<li>relationships between classes: <span class="fragment highlight-red">inheritance</span></li>
+						<li>abstraction: <span class="fragment highlight-red">polymorphism</span></li>
+					</ul>
+				</section>
+				<section data-markdown>
+					<textarea data-template>
+						## OO in Scala
+
+						```scala
+						trait Student:
+						  def attemptExam(subject: Subject): Grade
+						  def goToParty(): Boolean = true
+
+						class DiligentStudent(knowledge: List[Book]) extends Student:
+						  def attemptExam(subject: Subject): Grade = ...
+
+						class LazyStudent(excuses: List[String]) extends Student:
+						  def attemptExam(subject: Subject): Grade = ...
+
+						//
+
+						class Professor:
+						  def runExam(sub: Subject, sl: List[Student]): List[Grade] =
+						    sl.map(s => s.attemptExam(sub))
+						```
+					</textarea>
+				</section>
+				<section>
+					<h2>Functional programming</h2>
+
+					<ul>
+						<li><span class="fragment highlight-red">functions</span>: input => output</li>
+						<li><span class="fragment highlight-red">first-class citizens</span>: named, passed as arguments, returned</li>
+						<li>programming = <span class="fragment highlight-red">composing</span> (small) functions</li>
+						<li><span class="fragment highlight-red">declarative</span>, not imperative</li>
+						<li>behavior and data are <span class="fragment highlight-red">separate</span></li>
+					</ul>
+				</section>
+				<section data-markdown>
+					<textarea data-template>
+						## FP in Scala
+
+						```scala
+						trait Student
+						case class DiligentStudent(knowledge: List[Book]) extends Student
+						case class LazyStudent(excuses: List[String]) extends Student
+
+						def goToParty(s: Student): Boolean = true
+
+						def attemptExam(subject: Subject, s: Student): Grade =
+						  s match
+						    case DiligentStudent(knowledge) => ...
+						    case LazyStudent(excuses) => ...
+
+						//
+
+						def runExam(sub: Subject, sl: List[Student]): List[Grade] =
+						  sl.map(s => attemptExam(sub, s))
+						```
+					</textarea>
+				</section>
+				<section>
+					<h2>There are no "best" solutions in programming</h2>
+
+					<div class="fragment">
+						That's why we need to combine paradigms
+					</div>
+
+					<div class="fragment">
+						Preferably, with low syntax & boilerplate overhead
+					</div>
+				</section>
+				<section data-markdown>
+					<textarea data-template>
+						## Data modelling
+
+						```scala
+						trait FieldOfStudy:
+						  def points: Int
+
+						case object ComputerScience extends FieldOfStudy:
+						  def points: Int = 42
+
+						case class Linguistics(language: Language)
+						  extends FieldOfStudy:
+
+						  def points: Int = 51
+						```
+
+						---
+
+						```scala
+						trait Student:
+						  def field: FieldOfStudy
+						  def knowsAbout(subject: Subject): Boolean
+
+						case class DiligentStudent(field: FieldOfStudy,
+						    knowledge: List[Book]) extends Student:
+
+						  def knowsAbout(subject: Subject): Boolean =
+						    knowledge.exists(b => book.appliesTo(subject))
+
+						case class LazyStudent(field: FieldOfStudy,
+						    excuses: List[String]) extends Student:
+
+						  def knowsAbout(subject: Subject): Boolean =
+						    false
+						```
+
+						---
+
+						```scala
+						def oralExam(student: Student): Grade =
+						  student match
+						    case DiligentStudent(ComputerScience, _) =>
+						      blackboardCoding(student)
+
+							case DiligentStudent(Linguistics(English), Nil) =>
+						      Grade.Fail
+
+							case DiligentStudent(Linguistics(Polish), knowledge)
+						      if knowledge.contains(Books.Mickewicz) =>
+						      askAboutGreatImprovisation(student)
+
+						    case LazyStudent(_, _) => Grade.Fail
+						```
+
+						```console
+						warning: match may not be exhaustive.
+						It would fail on the following input: DiligentStudent(_, _)
+						```
+						<!-- .element: class="fragment" -->
+
+						---
+
+						## State & behavior?
+
+						* we can do both: combine, or separate
+						* no universal answers!
+						* but: often starting with the functional approach works well
+
+						---
+
+						## Functions as values
+
+						```scala
+						def examSession(s: Student,
+						    exam: Subject => Grade): List[Grade] =
+						  ...
+						```
+
+						```scala
+						def oralExam(student: Student): Grade = ..
+
+						examSession(me, oralExam)
+						```
+						<!-- .element: class="fragment" -->
+
+						```scala
+						trait Student:
+						  def takeExam(s: Subject): Grade
+
+						examSession(me, (s: Student).takeExam(_))
+						```
+						<!-- .element: class="fragment" -->
+
+						---
+
+						## Immutability
+
+						Scala is the only widely adopted immutable-first language.
+						What does it mean?
+
+						---
+
+						```scala
+						case class Student(name: String, yearOfStudy: Int, grades: Map[Subject, Grade])
+
+						def finishYear(s: Student): Student =
+						  if grades.values.forall(_ != Grade.Fail)
+						    s.copy(yearOfStudy = s.yearOfStudy + 1)
+						  else
+						    s
+						```
+
+						---
+
+						## Collections
+
+						```scala
+						case class Result(s: Student, sub: Subject, grade: Grade):
+						  def addToStudent: Student =
+						    student.copy(grades = student.grades + (sub -> grade))
+
+						def exam(sl: List[Student], subs: List[Subject]):
+						    List[Student] =
+						  sl.flatMap(s => subs.map(sub => (s, sub)))
+							.filter((s, sub) => s.attends(sub))
+							.map((s, sub) => s.takeExam(sub))
+							.filter(result => result.grade != Grade.Fail)
+							.map(result => result.addToStudent)
+						```
+
+						---
+
+						## Collections
+
+						`Map`s, `Set`s, `List`s, `Vector`s, `Iterator`s, lazy/eager ...
+
+						---
+
+						## Optionality
+
+						* many languages use `null`
+						* almost absent in Scala
+						* instead, use `Option`
+
+						```scala
+						trait Student:
+						  def thesisTitle: Option[Title]
+
+						me.thesisTitle match
+						  case Some(title) => println(title)
+						  case None => 		  println("Will be ready next week!")
+						```
+
+						---
+
+						## Optionality as a collection
+
+						```scala
+						val mightUnderstand = me.thesisTitle
+						  .map(_.language)
+						  .filter(_.isLatin)
+						  .isDefined
+						```
+
+						---
+
+						## Optionality as an error
+
+						```scala
+						val defended: Option[Grade] = for {
+						  thesis <- me.thesis
+						  when <- supervisor.availableTimeSlots.headOption
+						  where <- roomsWithProjector.find(_.hasFreeSlot(when))
+						} yield defend(thesis, when, where)
+						```
+					</textarea>
+				</section>
 			</div>
 		</div>
+
+		<!--
+		FP in the small, OO in the large
+
+		enum Grade:
+						  case Exceptional, Good, Pass, Fail
+		-->
 
 		<script src="dist/reveal.js"></script>
 		<script src="plugin/notes/notes.js"></script>
