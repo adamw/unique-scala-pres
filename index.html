@@ -253,7 +253,7 @@
 						  grades: Map[Subject, Grade])
 
 						def finishYear(s: Student): Student =
-						  if grades.values.forall(_ != Grade.Fail)
+						  if grades.values.forall(_ != Grade.Fail) then
 						    s.copy(yearOfStudy = s.yearOfStudy + 1)
 						  else
 						    s
