@@ -625,7 +625,7 @@
 						    .in("exam" / "submit")
 						    .in(jsonBody[Solution])
 						    .in(query[Token]("token")
-						      .description("Issued by the dean's office")
+						      .description("Issued by the dean's office"))
 						```
 
 						---
@@ -637,7 +637,7 @@
 						    .in("exam" / "submit")
 						    .in(jsonBody[Solution].example(Solution(42))
 						    .in(query[Token]("token")
-						      .description("Issued by the dean's office")
+						      .description("Issued by the dean's office"))
 						```
 
 						---
@@ -649,7 +649,7 @@
 						    .in("exam" / "submit")
 						    .in(jsonBody[Solution].example(Solution(42))
 						    .in(query[Token]("token")
-						      .description("Issued by the dean's office")
+						      .description("Issued by the dean's office"))
 						    .out(jsonBody[Result])
 						```
 					</textarea>
