@@ -225,7 +225,7 @@
 						```
 
 						```scala
-						def oralExam(student: Student): Grade = ..
+						def oralExam(subject: Subject): Grade = ..
 
 						examSession(me, oralExam)
 						```
@@ -235,7 +235,7 @@
 						trait Student:
 						  def takeExam(s: Subject): Grade
 
-						examSession(me, (s: Student).takeExam(_))
+						examSession(me, me.takeExam(_))
 						```
 						<!-- .element: class="fragment" -->
 
@@ -352,7 +352,7 @@
 						}
 						fork {
 						  val results = runExam(sl)
-						  val updateStudentsWithResults(sl, results)
+						  updateStudentsWithResults(sl, results)
 						}
 						```
 
@@ -370,6 +370,9 @@
 						* IDE completion
 						* refactor with confidence
 						* generate code
+
+						29cd042c638d
+						<!-- .element: style="color: #ff8085;" -->
 
 						---
 
@@ -496,14 +499,15 @@
 
 						## Another example of using a type class
 
-						```scala [1-5|7]
+						```scala [1-5|7-8]
 						def solve[T](by: T, what: Subject)(using Scientist[T]) =
 						  if summon[Scientist[T]].canResearch(who, sub)
 						    println("Problem solved!")
 						  else
 						    println("No idea!")
 
-						solve[Student](me, subject)
+						val me: Student = ...
+						solve(me, subject)
 						```
 
 						---
